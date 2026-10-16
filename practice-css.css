@@ -1,0 +1,63 @@
+#marks12{
+    width:200px;
+    border-radius:20px;
+    margin:auto;
+    height: 30px;
+    box-sizing:border-box
+}
+#email1{
+    width: 300px;
+    border-radius:20px;
+     height: 30px;
+    box-sizing:border-box
+}
+#name{
+    width: 200px;
+    border-radius:20px;
+     height: 30px;
+    box-sizing:border-box
+}
+#mobile{
+    margin-right: 50px;
+    border-radius:20px;
+    width:200px;
+     height: 30px;
+    box-sizing:border-box
+}
+#anomobile{
+    border-radius:20px;
+    width:200px;
+     height: 30px;
+    box-sizing:border-box
+    
+
+}
+#Field{
+    border-radius:20px;
+     height: 30px;
+    box-sizing:border-box
+
+}
+#submit{
+    border-radius:20px;
+    background-color: black;
+    color:aliceblue;
+    margin-right:10px;
+    box-sizing: border-box;
+    width:70px;
+
+}
+#reset{
+    border-radius:20px;
+    background-color:red;
+    color:white;
+    width:70px;
+    box-sizing: border-box;
+}
+input{
+    text-align: center;
+}
+input::placeholder{
+    text-align: center;
+}
+    

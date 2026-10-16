@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet"
+    href="practice-css.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REGISTRATION FORM</title>
+</head>
+<body>
+    <header>
+        <h1>REGISTRATION FORM</h1>
+    </header>
+    <main>
+        <section>
+            <form action="practice1-txt.txt" method="get">
+                <fieldset>
+                    <legend>PERSONAL DETAILS</legend>
+                    <table>
+                    <tr>
+                        <td>
+                            <label for="name">Name</label>
+                            <br>
+                            <input type="text"
+                            id="name" autofocus required autocomplete="off" pattern="[A-Za-z ]+" placeholder="Enter Name" name="Username" title="Enter your full name">
+                            <br>
+                            <br>
+                            <label for="dob">DOB</label>
+                            <br>
+                            <input type="date" required autocomplete="off" id="dob" name="Date Of Birth">
+                            <br>
+                            <br>
+                            <label>Gender</label><br>
+                            <input type="radio" required autocomplete="on" name="gender" value="Male">M
+                            <input type="radio" required autocomplete="on" name="gender" value="Female">F
+                            <br>
+                            <br>
+                            <label for="email1">Email</label>
+                            <br>
+                            <input type="email" required id="email1" placeholder="Enter Email" autocomplete="on" name="Email">
+                            <br>
+                            <br>
+                            <label for="mobile">Mobile</label>
+                            <input type="tel" required autocomplete="off" placeholder="Enter Mobile" id="mobile" pattern="[0-9]{10}" maxlength="10" name="Mobile1">
+                            <label for="anomobile"> Another Mobile</label>
+                            <input type="tel" required autocomplete="off" placeholder="Enter another mobile" pattern="[0-9]{10}" id="anomobile" maxlength="10" name="Mobile2">
+                            <br>
+                            <br>
+                            <label>Field of Interest</label>
+                            <br>
+                            <select name="Field of Interest" id="Field">
+                                <option>Computer Science Engineering</option>
+                                <option>Computer Science & Information Technology</option>
+                                <option>AIDS</option>
+                                <option>Electrical & Communication Engineering</option>
+                                <option>Electrical & Electrical Engineering</option>
+                                <option>Mechanical Engineering</option>
+                                <option>Civil Engineering</option>
+                            </select>
+                            <br>
+                            <br>
+                            <label for="marks12">Class 12 Marks</label>
+                            <br>
+                            <input type="text" placeholder="Enter Class 12 Marks" required autocomplete="off" id="marks12" name="Class 12 Marks">
+                            <br>
+                            <br>
+                            <input type="submit" id="submit">
+                            <input type="reset" id="reset">
+                        </td>
+                    </tr>
+                </table>
+            </fieldset>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

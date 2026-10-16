@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeWave - Liquid Glass Music Streaming</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            mint: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              dark: '#064e3b'
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & Phosphor Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    :root {
+      --bg-mint: #eaf6ef;
+      --mint-glass: rgba(255, 255, 255, 0.72);
+      --mint-glass-border: rgba(255, 255, 255, 0.85);
+      --emerald-accent: #059669;
+      --emerald-dark: #064e3b;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-mint);
+      color: #064e3b;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    #glassCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: 
+        radial-gradient(circle at 85% 15%, rgba(110, 231, 183, 0.35), transparent 45%),
+        radial-gradient(circle at 15% 85%, rgba(52, 211, 153, 0.25), transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(167, 243, 208, 0.4), transparent 45%);
+      filter: blur(40px);
+    }
+
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.68);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      box-shadow: 0 12px 35px -8px rgba(5, 150, 105, 0.08), 
+                  0 4px 12px rgba(255, 255, 255, 0.7) inset;
+    }
+
+    .liquid-glass-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .liquid-glass-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255, 255, 255, 0.88);
+      border-color: rgba(5, 150, 105, 0.4);
+      box-shadow: 0 16px 30px -10px rgba(5, 150, 105, 0.18), 0 0 16px rgba(16, 185, 129, 0.12);
+    }
+
+    .mac-dock-bar {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(32px) saturate(200%);
+      -webkit-backdrop-filter: blur(32px) saturate(200%);
+      border: 1.5px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 
+        0 20px 45px -10px rgba(6, 78, 59, 0.18),
+        0 4px 16px rgba(16, 185, 129, 0.12),
+        inset 0 1.5px 2px rgba(255, 255, 255, 1);
+      border-radius: 28px;
+    }
+
+    .dock-icon-wrapper {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      cursor: pointer;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(236, 253, 245, 0.8));
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1), inset 0 1px 1px #fff;
+      transform-origin: bottom center;
+      transition: width 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.2), 
+                  height 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.2), 
+                  transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    }
+
+    .dock-icon-wrapper.active-dock-item {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 22px rgba(5, 150, 105, 0.35);
+    }
+    .dock-icon-wrapper.active-dock-item i {
+      color: #ffffff !important;
+    }
+
+    .dock-tooltip {
+      position: absolute;
+      top: -34px;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      background: rgba(6, 78, 59, 0.92);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .dock-icon-wrapper:hover .dock-tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes bounceEqualizer {
+      0%, 100% { height: 4px; }
+      50% { height: 18px; }
+    }
+    .wave-bar {
+      animation: bounceEqualizer 1s infinite ease-in-out;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.18s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.36s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.52s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.24s; }
+
+    .picker-chip {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1.5px solid rgba(255, 255, 255, 0.9);
+    }
+    .picker-chip.selected {
+      background: #059669 !important;
+      color: #ffffff !important;
+      border-color: #047857 !important;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+    }
+    .picker-chip.selected * {
+      color: #ffffff !important;
+    }
+    .picker-chip.selected .check-icon {
+      display: inline-flex !important;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(6, 78, 59, 0.05);
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(5, 150, 105, 0.25);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-44 selection:bg-emerald-300 selection:text-emerald-950 relative">
+
+  <div class="ambient-glow"></div>
+  <canvas id="glassCanvas"></canvas>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed top-6 right-6 z-50 transform translate-x-full opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="liquid-glass border border-emerald-300 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-emerald-950 font-bold text-xs sm:text-sm bg-white/95">
+      <i id="toastIcon" class="ph-bold ph-check-circle text-emerald-600 text-xl"></i>
+      <span id="toastMessage">Action completed</span>
+    </div>
+  </div>
+
+  <!-- Recovery Alert Banner -->
+  <div id="recoveryNoticeBar" class="hidden bg-emerald-600 text-white px-4 py-2 text-xs font-bold text-center z-50 relative flex items-center justify-center gap-3 shadow-md">
+    <i class="ph-bold ph-shield-check text-base"></i>
+    <span id="recoveryNoticeText">Data Vault active. Your additions are stored safely.</span>
+    <button onclick="dismissRecoveryBanner()" class="bg-emerald-800 hover:bg-emerald-900 px-2.5 py-0.5 rounded-lg text-[10px] uppercase">Got it</button>
+  </div>
+
+  <!-- Top Public Navigation Bar (No admin or mode switcher buttons) -->
+  <header class="sticky top-0 z-40 px-4 sm:px-8 py-3.5 transition-all duration-300">
+    <div class="max-w-7xl mx-auto liquid-glass rounded-2xl px-5 py-3 flex items-center justify-between gap-4 border border-white/80 shadow-md">
+      
+      <!-- Brand Logo -->
+      <div onclick="navigateHome()" class="flex items-center gap-3 cursor-pointer group select-none">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-emerald-600/25 group-hover:scale-105 group-hover:rotate-3 transition duration-300 border border-white/70">
+          <i class="ph-bold ph-waveform text-2xl"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-display text-xl font-extrabold tracking-tight text-emerald-950">VibeWave</span>
+          <span class="text-[9px] uppercase font-bold tracking-wider text-emerald-700/80 -mt-1">Mint Audio Stream</span>
+        </div>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="flex-1 max-w-md hidden md:block">
+        <div class="relative group">
+          <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-700/70 group-focus-within:text-emerald-700 text-base transition-colors"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search songs, heroes, albums, artists, genres..." 
+            oninput="handleSearch(this.value)"
+            class="w-full bg-white/70 hover:bg-white/95 text-xs sm:text-sm text-emerald-950 placeholder-emerald-700/50 rounded-full pl-10 pr-4 py-2 border border-emerald-200/80 focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-400/30 transition-all shadow-sm"
+          />
+        </div>
+      </div>
+
+      <!-- Top Right Auth Buttons (Only Sign Up and Login) -->
+      <div class="flex items-center gap-2.5" id="authActionsContainer"></div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 relative z-10">
+
+    <!-- VIEW 1: PUBLIC USER SPACE -->
+    <div id="userSpaceView" class="space-y-12">
+      
+      <!-- Welcome Hero Banner -->
+      <section class="liquid-glass rounded-3xl p-6 sm:p-10 relative overflow-hidden border border-white shadow-xl shadow-emerald-900/5">
+        <div class="relative z-10 max-w-2xl space-y-3">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/80 border border-emerald-200 text-emerald-800 shadow-sm">
+            <i class="ph-fill ph-sparkle text-emerald-600"></i> Pure Mint Liquid Acoustics
+          </span>
+          <h1 class="font-display text-3xl sm:text-5xl font-black tracking-tight text-emerald-950 leading-tight">
+            Immerse In <span class="bg-gradient-to-r from-emerald-700 via-teal-700 to-green-600 bg-clip-text text-transparent">Liquid Melodies</span>
+          </h1>
+          <p class="text-emerald-900/80 text-xs sm:text-sm leading-relaxed font-medium">
+            Explore cinema stars, trending albums, artist signatures, and music genres in high-fidelity liquid audio.
+          </p>
+          <div class="pt-2">
+            <button onclick="playFirstAvailableSong()" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2.5 shadow-lg shadow-emerald-700/25 transition transform active:scale-95 border border-emerald-400/30">
+              <i class="ph-fill ph-play text-base"></i>
+              <span id="heroBannerPlayBtn">Start Listening</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROW 1: POPULAR SONGS BY HERO -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-xl sm:text-2xl font-black text-emerald-950 flex items-center gap-2">
+              <i class="ph-fill ph-crown text-amber-500"></i> Star Heroes
+            </h2>
+            <p class="text-xs sm:text-sm text-emerald-700/80 font-medium">Star anthems and blockbuster hero signatures</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="row1HeroesContainer"></div>
+      </section>
+
+      <!-- ROW 2: ALBUMS -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-xl sm:text-2xl font-black text-emerald-950 flex items-center gap-2">
+              <i class="ph-fill ph-disc text-teal-600"></i> Featured Albums
+            </h2>
+            <p class="text-xs sm:text-sm text-emerald-700/80 font-medium">Original soundtracks & trending collections</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="row2AlbumsContainer"></div>
+      </section>
+
+      <!-- ROW 3: ARTISTS -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-xl sm:text-2xl font-black text-emerald-950 flex items-center gap-2">
+              <i class="ph-fill ph-microphone-stage text-emerald-600"></i> Renowned Artists
+            </h2>
+            <p class="text-xs sm:text-sm text-emerald-700/80 font-medium">Playback vocalists, composers & musicians</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="row3ArtistsContainer"></div>
+      </section>
+
+      <!-- ROW 4: GENRES -->
+      <section class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-xl sm:text-2xl font-black text-emerald-950 flex items-center gap-2">
+              <i class="ph-fill ph-waveform text-orange-500"></i> Genre Vibes
+            </h2>
+            <p class="text-xs sm:text-sm text-emerald-700/80 font-medium">Mass beats, romantic melodies & party anthems</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" id="row4GenresContainer"></div>
+      </section>
+
+    </div>
+
+    <!-- VIEW 2: CATEGORY DRILLDOWN & SEARCH RESULTS -->
+    <div id="filterCategoryView" class="hidden space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-200">
+        <div>
+          <button onclick="navigateHome()" class="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 mb-2">
+            <i class="ph ph-caret-left text-base"></i> Back to Main Catalog
+          </button>
+          <div class="flex items-center gap-3">
+            <div id="filterCategoryAvatar" class="w-14 h-14 rounded-2xl overflow-hidden bg-emerald-100 border border-white shadow-md flex-shrink-0">
+              <img id="filterCategoryImg" src="" alt="Entity" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <span id="filterCategoryTypeTag" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Category
+              </span>
+              <h2 id="filterCategoryTitle" class="font-display text-2xl sm:text-3xl font-extrabold text-emerald-950 mt-1">Entity Name</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="playAllFilteredSongs()" class="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-700/20 transition">
+            <i class="ph-fill ph-play"></i> Play All
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="filteredCategorySongsContainer"></div>
+    </div>
+
+    <!-- VIEW 3: ADMIN STUDIO (Unlocked via confidential login: V.Muneer / Muneer@77777) -->
+    <div id="adminPortalView" class="hidden space-y-8">
+      
+      <!-- Admin Studio Banner -->
+      <section class="liquid-glass rounded-3xl p-6 sm:p-8 border border-white shadow-xl shadow-emerald-900/5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                <i class="ph-fill ph-shield-check text-emerald-600"></i> Admin Studio
+              </span>
+              <span class="text-xs text-emerald-700 font-semibold">Logged In: <strong>V.Muneer</strong></span>
+            </div>
+            <h1 class="font-display text-2xl sm:text-4xl font-extrabold tracking-tight text-emerald-950">
+              Admin Music Studio
+            </h1>
+            <p class="text-emerald-800 text-xs sm:text-sm mt-1 max-w-2xl font-medium">
+              Create and manage Songs, Heroes, Albums, Artists, and Genres. Use your 5TB Google Drive links or direct files below.
+            </p>
+          </div>
+
+          <!-- Studio Action Buttons -->
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="openAddSongModal()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-emerald-700/25 transition transform active:scale-95 border border-emerald-400/40">
+              <i class="ph-bold ph-plus-circle text-lg"></i>
+              <span>Add Song</span>
+            </button>
+            <button onclick="openAddTypeModal()" class="px-5 py-3 rounded-2xl bg-white/90 hover:bg-white text-emerald-950 font-bold text-xs sm:text-sm flex items-center gap-2 border border-emerald-200/90 shadow-sm transition">
+              <i class="ph-bold ph-squares-four text-lg text-emerald-600"></i>
+              <span>Add Type</span>
+            </button>
+            <button onclick="navigateHome()" class="px-4 py-3 rounded-2xl bg-emerald-100/80 hover:bg-emerald-200 text-emerald-900 font-bold text-xs flex items-center gap-1.5 border border-emerald-300 transition">
+              <i class="ph ph-arrow-square-out text-base"></i>
+              <span>View Public Website</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DATA RESCUE & BACKUP VAULT -->
+      <section class="liquid-glass rounded-3xl p-5 sm:p-6 border-2 border-emerald-300/80 bg-white/80">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h3 class="font-display text-base font-black text-emerald-950">Data Vault & Permanent Backup</h3>
+            </div>
+            <p class="text-xs text-emerald-800">
+              Download your catalog file (.json) to your computer. Click "Restore Backup" anytime to restore every song, hero, album, and genre instantly with zero loss!
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="runDeepDataRecovery(true)" class="px-3.5 py-2 rounded-xl bg-teal-100 text-teal-900 hover:bg-teal-200 font-bold text-xs flex items-center gap-1.5 border border-teal-300 transition">
+              <i class="ph-bold ph-arrows-counter-clockwise"></i> Scan Storage
+            </button>
+            <button onclick="exportCatalogBackup()" class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-700/20 transition">
+              <i class="ph-bold ph-download-simple"></i> Download Backup (.json)
+            </button>
+            <label class="px-4 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-950 font-extrabold text-xs flex items-center gap-1.5 border border-emerald-300 shadow-sm cursor-pointer transition">
+              <i class="ph-bold ph-upload-simple text-emerald-700"></i> Restore Backup
+              <input type="file" id="importJsonFileInput" accept=".json" onchange="importCatalogBackup(event)" class="hidden">
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Summary -->
+      <section class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="p-5 rounded-2xl liquid-glass">
+          <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Total Songs</span>
+          <h3 class="text-2xl sm:text-3xl font-black text-emerald-950 mt-1" id="statSongsCount">0</h3>
+        </div>
+        <div class="p-5 rounded-2xl liquid-glass">
+          <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Heroes (Row 1)</span>
+          <h3 class="text-2xl sm:text-3xl font-black text-emerald-950 mt-1" id="statHeroesCount">0</h3>
+        </div>
+        <div class="p-5 rounded-2xl liquid-glass">
+          <span class="text-xs font-bold text-teal-700 uppercase tracking-wider">Albums (Row 2)</span>
+          <h3 class="text-2xl sm:text-3xl font-black text-emerald-950 mt-1" id="statAlbumsCount">0</h3>
+        </div>
+        <div class="p-5 rounded-2xl liquid-glass">
+          <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Artists & Genres</span>
+          <h3 class="text-2xl sm:text-3xl font-black text-emerald-950 mt-1" id="statOthersCount">0</h3>
+        </div>
+      </section>
+
+      <!-- MANAGEMENT & DELETION SUITE -->
+      <section class="liquid-glass rounded-3xl p-6 sm:p-8 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-emerald-100">
+          <div>
+            <h2 class="font-display text-lg sm:text-xl font-black text-emerald-950 flex items-center gap-2">
+              <i class="ph-fill ph-trash text-rose-500"></i> Management & Permanent Deletion
+            </h2>
+            <p class="text-xs text-emerald-700 font-medium">Delete songs or registered entities permanently. Changes save immediately.</p>
+          </div>
+
+          <!-- Category Management Tab Selectors -->
+          <div class="flex flex-wrap gap-1.5 p-1 rounded-2xl bg-emerald-100/70 border border-emerald-200 text-xs font-bold">
+            <button onclick="switchAdminManageTab('songs')" id="adminTabBtn_songs" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white shadow-sm transition">
+              Songs
+            </button>
+            <button onclick="switchAdminManageTab('hero')" id="adminTabBtn_hero" class="px-3.5 py-1.5 rounded-xl text-emerald-800 hover:text-emerald-950 transition">
+              Heroes
+            </button>
+            <button onclick="switchAdminManageTab('album')" id="adminTabBtn_album" class="px-3.5 py-1.5 rounded-xl text-emerald-800 hover:text-emerald-950 transition">
+              Albums
+            </button>
+            <button onclick="switchAdminManageTab('artist')" id="adminTabBtn_artist" class="px-3.5 py-1.5 rounded-xl text-emerald-800 hover:text-emerald-950 transition">
+              Artists
+            </button>
+            <button onclick="switchAdminManageTab('genre')" id="adminTabBtn_genre" class="px-3.5 py-1.5 rounded-xl text-emerald-800 hover:text-emerald-950 transition">
+              Genres
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: SONGS -->
+        <div id="adminManageSection_songs" class="space-y-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead>
+                <tr class="text-emerald-900 border-b border-emerald-100 font-bold uppercase tracking-wider text-[11px]">
+                  <th class="py-3 px-3">Play</th>
+                  <th class="py-3 px-3">Title</th>
+                  <th class="py-3 px-3">Hero</th>
+                  <th class="py-3 px-3">Album</th>
+                  <th class="py-3 px-3">Artist</th>
+                  <th class="py-3 px-3">Genre</th>
+                  <th class="py-3 px-3 text-right">Delete Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminSongsTableBody" class="divide-y divide-emerald-100/70"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: HEROES -->
+        <div id="adminManageSection_hero" class="hidden">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="adminHeroesGrid"></div>
+        </div>
+
+        <!-- TAB CONTENT: ALBUMS -->
+        <div id="adminManageSection_album" class="hidden">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="adminAlbumsGrid"></div>
+        </div>
+
+        <!-- TAB CONTENT: ARTISTS -->
+        <div id="adminManageSection_artist" class="hidden">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="adminArtistsGrid"></div>
+        </div>
+
+        <!-- TAB CONTENT: GENRES -->
+        <div id="adminManageSection_genre" class="hidden">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4" id="adminGenresGrid"></div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- macOS LIQUID GLASS DOCK -->
+  <div class="fixed bottom-24 left-0 right-0 z-40 flex justify-center pointer-events-none">
+    <nav 
+      id="macLiquidDock" 
+      class="mac-dock-bar pointer-events-auto px-4 py-2.5 flex items-center gap-3 select-none"
+      onmouseleave="resetDockMagnification()"
+    >
+      <div class="relative group" onclick="dockAction('home')">
+        <div class="dock-icon-wrapper active-dock-item text-emerald-800" data-dock="home">
+          <i class="ph-bold ph-house text-2xl"></i>
+          <span class="dock-tooltip">Home</span>
+        </div>
+      </div>
+
+      <div class="relative group" onclick="dockAction('search')">
+        <div class="dock-icon-wrapper text-emerald-800" data-dock="search">
+          <i class="ph-bold ph-magnifying-glass text-2xl"></i>
+          <span class="dock-tooltip">Search</span>
+        </div>
+      </div>
+
+      <div class="relative group" onclick="dockAction('profile')">
+        <div class="dock-icon-wrapper text-emerald-800" data-dock="profile">
+          <i class="ph-bold ph-user text-2xl"></i>
+          <span class="dock-tooltip" id="dockProfileTooltip">Account / Studio</span>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- BOTTOM FLOATING AUDIO PLAYER -->
+  <aside id="audioPlayer" class="fixed bottom-0 left-0 right-0 z-40 bg-white/85 backdrop-blur-2xl border-t border-white/90 px-4 py-3 shadow-[0_-10px_35px_rgba(5,150,105,0.08)]">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      
+      <!-- Current Song Info -->
+      <div class="flex items-center gap-3.5 w-full sm:w-1/4">
+        <div class="relative w-12 h-12 rounded-xl overflow-hidden bg-emerald-100 flex-shrink-0 border border-white shadow-sm flex items-center justify-center">
+          <img id="playerCover" src="" alt="Track Cover" class="w-full h-full object-cover">
+        </div>
+        <div class="overflow-hidden">
+          <h4 id="playerTitle" class="text-sm font-bold text-emerald-950 truncate">No Track Selected</h4>
+          <p id="playerSubtitle" class="text-xs text-emerald-700 font-medium truncate">Select any song to play</p>
+        </div>
+      </div>
+
+      <!-- Controls & Scrubber Bar -->
+      <div class="flex flex-col items-center gap-1.5 w-full sm:w-2/4">
+        <div class="flex items-center gap-5">
+          <button onclick="prevTrack()" class="text-emerald-900 hover:text-emerald-600 transition text-lg active:scale-95">
+            <i class="ph-bold ph-skip-back"></i>
+          </button>
+          <button onclick="togglePlayPause()" id="playPauseBtn" class="w-10 h-10 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex items-center justify-center hover:scale-105 active:scale-95 transition shadow-md shadow-emerald-700/30">
+            <i class="ph-fill ph-play text-lg ml-0.5" id="playPauseIcon"></i>
+          </button>
+          <button onclick="nextTrack()" class="text-emerald-900 hover:text-emerald-600 transition text-lg active:scale-95">
+            <i class="ph-bold ph-skip-forward"></i>
+          </button>
+        </div>
+
+        <div class="w-full flex items-center gap-2.5 max-w-lg">
+          <span id="currentTime" class="text-[11px] font-mono font-semibold text-emerald-800 w-8 text-right">0:00</span>
+          <div class="relative flex-1 group py-1 cursor-pointer" onclick="seekAudio(event)" id="progressBarContainer">
+            <div class="w-full h-1.5 bg-emerald-200/70 rounded-full overflow-hidden">
+              <div id="progressFill" class="h-full bg-gradient-to-r from-emerald-600 to-teal-500 w-0 transition-[width] duration-150 rounded-full"></div>
+            </div>
+          </div>
+          <span id="durationTime" class="text-[11px] font-mono font-semibold text-emerald-800 w-8">0:00</span>
+        </div>
+      </div>
+
+      <!-- Equalizer Visualizer & Volume -->
+      <div class="hidden sm:flex items-center justify-end gap-4 w-1/4">
+        <div class="flex items-end gap-1 h-6 px-2">
+          <span class="w-1 bg-emerald-600 rounded-full wave-bar opacity-80"></span>
+          <span class="w-1 bg-teal-500 rounded-full wave-bar opacity-80"></span>
+          <span class="w-1 bg-green-500 rounded-full wave-bar opacity-80"></span>
+          <span class="w-1 bg-emerald-400 rounded-full wave-bar opacity-80"></span>
+          <span class="w-1 bg-teal-400 rounded-full wave-bar opacity-80"></span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="toggleMute()" class="text-emerald-800 hover:text-emerald-950 transition">
+            <i class="ph ph-speaker-high text-lg" id="volumeIcon"></i>
+          </button>
+          <input 
+            type="range" 
+            id="volumeSlider" 
+            min="0" 
+            max="1" 
+            step="0.05" 
+            value="0.8" 
+            oninput="setVolume(this.value)" 
+            class="w-20 h-1.5 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+          >
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- MODAL 1: SIGN UP -->
+  <div id="signUpModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/45 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+    <div class="relative w-full max-w-md rounded-3xl liquid-glass p-6 sm:p-8 border border-white/95 shadow-2xl bg-white/95">
+      <button onclick="closeModal('signUpModal')" class="absolute top-5 right-5 text-emerald-800 hover:text-emerald-950 p-1.5 rounded-full hover:bg-emerald-100 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-800 flex items-center justify-center mx-auto mb-3 shadow-inner">
+          <i class="ph-bold ph-user-plus text-2xl"></i>
+        </div>
+        <h3 class="font-display text-2xl font-black text-emerald-950 tracking-tight">Create Account</h3>
+        <p class="text-xs text-emerald-700 mt-1 font-medium">Join VibeWave to stream liquid music</p>
+      </div>
+
+      <form id="signUpForm" onsubmit="handleUserSignUp(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Full Name <span class="text-rose-500">*</span></label>
+          <input type="text" id="signupFullName" required placeholder="e.g. Rahul Sharma" class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Gmail / Email Address <span class="text-rose-500">*</span></label>
+          <input type="email" id="signupEmail" required placeholder="e.g. name@gmail.com" class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Phone Number <span class="text-emerald-600 font-normal">(Optional)</span></label>
+          <input type="tel" id="signupPhone" placeholder="+91 98765 43210" class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Password <span class="text-rose-500">*</span></label>
+          <input type="password" id="signupPassword" required placeholder="Create password" class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-700/25 transition transform active:scale-98">
+          Complete Sign Up
+        </button>
+      </form>
+
+      <div class="mt-4 text-center">
+        <p class="text-xs text-emerald-800">
+          Already have an account? 
+          <button onclick="closeModal('signUpModal'); openLoginModal();" class="font-bold text-emerald-950 hover:underline">
+            Login here
+          </button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: DUAL LOGIN (User & Confidential Admin) -->
+  <div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/45 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+    <div class="relative w-full max-w-md rounded-3xl liquid-glass p-6 sm:p-8 border border-white/95 shadow-2xl bg-white/95">
+      <button onclick="closeModal('loginModal')" class="absolute top-5 right-5 text-emerald-800 hover:text-emerald-950 p-1.5 rounded-full hover:bg-emerald-100 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+
+      <div class="text-center mb-5">
+        <h3 class="font-display text-2xl font-black text-emerald-950 tracking-tight">Welcome to VibeWave</h3>
+        <p class="text-xs text-emerald-700 mt-1 font-medium">Select your portal to proceed</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-emerald-100/70 border border-emerald-200 text-xs font-bold text-center mb-5">
+        <button type="button" onclick="switchLoginTab('user')" id="tabBtnUserLogin" class="py-2 rounded-xl transition bg-emerald-600 text-white shadow-sm">
+          User Login
+        </button>
+        <button type="button" onclick="switchLoginTab('admin')" id="tabBtnAdminLogin" class="py-2 rounded-xl transition text-emerald-800 hover:text-emerald-950">
+          Admin Login
+        </button>
+      </div>
+
+      <!-- User Form -->
+      <form id="userLoginForm" onsubmit="handleUserLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Gmail / Username</label>
+          <div class="relative">
+            <i class="ph ph-envelope text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="userLoginIdentifier" required placeholder="e.g. name@gmail.com" class="w-full bg-white border border-emerald-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Password</label>
+          <div class="relative">
+            <i class="ph ph-lock text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="password" id="userLoginPassword" required placeholder="Enter your password" class="w-full bg-white border border-emerald-200 rounded-xl pl-10 pr-10 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+            <button type="button" onclick="togglePasswordVis('userLoginPassword', this)" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-600 hover:text-emerald-900">
+              <i class="ph ph-eye"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-700/25 transition transform active:scale-98">
+          Sign In
+        </button>
+        <div class="text-center pt-1">
+          <p class="text-xs text-emerald-800">
+            Don't have an account? 
+            <button type="button" onclick="closeModal('loginModal'); openSignUpModal();" class="font-bold text-emerald-950 hover:underline">
+              Sign Up now
+            </button>
+          </p>
+        </div>
+      </form>
+
+      <!-- Admin Form (Confidential Credentials: V.Muneer / Muneer@77777) -->
+      <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Admin Username</label>
+          <div class="relative">
+            <i class="ph ph-shield-check text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="adminUsernameInput" required placeholder="Enter admin ID" class="w-full bg-white border border-emerald-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Admin Password</label>
+          <div class="relative">
+            <i class="ph ph-lock-key text-emerald-600 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="password" id="adminPasswordInput" required placeholder="Enter admin password" class="w-full bg-white border border-emerald-200 rounded-xl pl-10 pr-10 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+            <button type="button" onclick="togglePasswordVis('adminPasswordInput', this)" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-600 hover:text-emerald-900">
+              <i class="ph ph-eye"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-700/25 transition transform active:scale-98">
+          Login to Admin Portal
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- MODAL 3: ADMIN "ADD SONG" (Supports Google Drive & 1-Click Visual Pickers) -->
+  <div id="addSongModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/45 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+    <div class="relative w-full max-w-2xl rounded-3xl liquid-glass p-6 sm:p-8 border border-white/95 shadow-2xl bg-white/95 max-h-[92vh] overflow-y-auto">
+      <button onclick="closeModal('addSongModal')" class="absolute top-5 right-5 text-emerald-800 hover:text-emerald-950 p-1.5 rounded-full hover:bg-emerald-100 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+
+      <div class="text-left mb-6">
+        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+          Admin Portal Pipeline
+        </span>
+        <h3 class="font-display text-2xl font-black text-emerald-950 tracking-tight mt-1">Upload & Add Song</h3>
+        <p class="text-xs text-emerald-700 font-medium">Click on any registered item below to link it instantly, or type a new name</p>
+      </div>
+
+      <form id="addSongForm" onsubmit="submitNewSong(event)" class="space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Song Title <span class="text-rose-500">*</span></label>
+          <input type="text" id="songTitleInput" required placeholder="e.g. Mass Theme Anthem" class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Google Drive Direct Audio Link (5TB Storage)</label>
+          <input type="url" id="songDriveUrlInput" placeholder="https://docs.google.com/uc?export=download&id=..." class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2.5 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+          <p class="text-[10px] text-emerald-700 mt-1">Paste your shared Google Drive audio link or upload an audio file below.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-emerald-900 mb-1">Or Upload Audio File <span class="text-emerald-600 font-normal">(MP3, WAV)</span></label>
+          <div class="border-2 border-dashed border-emerald-300 rounded-2xl p-4 text-center bg-emerald-50/50 hover:bg-emerald-50 transition cursor-pointer relative">
+            <input type="file" id="songAudioFileInput" accept="audio/*" onchange="handleAudioFileSelect(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+            <i class="ph-bold ph-file-audio text-3xl text-emerald-600 mx-auto"></i>
+            <p id="audioFileLabel" class="text-xs font-bold text-emerald-950 mt-1">Select audio file or leave blank to auto-synthesize melodic waves</p>
+          </div>
+        </div>
+
+        <!-- 4 Row Mapping Fields with 1-Click Visual Pickers -->
+        <div class="space-y-4">
+          <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                <i class="ph-fill ph-crown text-amber-500"></i> Hero (Row 1) <span class="text-rose-500">*</span>
+              </label>
+              <span class="text-[10px] text-emerald-700 font-semibold">Click avatar to select</span>
+            </div>
+            <div id="heroPickerContainer" class="flex flex-wrap gap-2 mb-2"></div>
+            <input type="text" id="songHeroInput" required placeholder="Select from above or type hero name" class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-teal-50/70 border border-teal-200/80">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-teal-950 flex items-center gap-1.5">
+                <i class="ph-fill ph-disc text-teal-600"></i> Album (Row 2) <span class="text-rose-500">*</span>
+              </label>
+              <span class="text-[10px] text-teal-700 font-semibold">Click album to select</span>
+            </div>
+            <div id="albumPickerContainer" class="flex flex-wrap gap-2 mb-2"></div>
+            <input type="text" id="songAlbumInput" required placeholder="Select from above or type album name" class="w-full bg-white border border-emerald-200 rounded-xl px-4 py-2 text-xs text-emerald-950 focus:outline-none focus:border-emerald-500"/>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                <i class="ph-fill ph-microphone-stage text-emerald-600"></i> Artist (Row 3) <span class="text-rose-500">*</span>

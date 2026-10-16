@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form>
+        <fieldset>
+        <legend style="color: red;font-size:larger;font-weight: 500;font-family: 'Times New Roman', Times, serif;"><b>PERSONAL DETAILS</b></legend>
+        <label>NAME            <span style="color: red;">*required</span></label>
+        <br>
+        <input type="text" required autocomplete="off" autofocus pattern="[A-Za-z ]+" placeholder="Enter Name">
+        <br>
+        <br>
+        <label>DOB</label>
+        <br>
+        <input type="date" required>
+        <br>
+        <br>
+        <label>GMAIL     <span style="color: red;">*required</span></label>
+        <br>
+        <input type="email" pattern=".+@gmail\.com"
+        required
+        autocomplete="on"
+        placeholder="Enter Gmail">
+        <br>
+        <br>
+        <table>
+            <tr>
+                <td colspan="2"><label>SCHOOL <span style="color: red;">*required</span></label>
+                <br>
+                <input type="text" placeholder="Enter School Name" required autocomplete="off"></td>
+                <td colspan="2">
+                    <label>Phone Number <span style="color: red;">*required</span></label>
+                    <br>
+                    <input type="tel" pattern="[0-9]{10}" placeholder="Enter Mobile No" required  autocomplete="on">
+                </td>
+                <td colspan="2">
+                    <label>SCHOOL ID <span style="color: red;">*required</span></label>
+                    <br>
+                    <input type="text" required  autocomplete="off" pattern="KL[0-9]{10}"
+                    placeholder="KL25000***** ">
+
+                </td>
+            </tr>
+        </table>
+        <input type="text" disabled>
+        <input type="text" value="Bitch" readonly>
+        <br><br>
+<button type="submit">Submit</button>
+
+    </fieldset>
+    </form>
+</body>
+</html>
